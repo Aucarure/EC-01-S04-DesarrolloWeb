@@ -41,6 +41,7 @@
     .btn-secondary { background: #2d3148; color: #94a3b8; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
     .toast { position: fixed; bottom: 2rem; right: 2rem; background: #1a1d27; border: 1px solid #2d3148; border-left: 3px solid #7c6af7; border-radius: 8px; padding: 12px 20px; font-size: 14px; color: #e2e8f0; z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
+    .error-banner { background: #2d1f1f; border: 1px solid #f87171; border-left: 4px solid #f87171; color: #f87171; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -54,25 +55,37 @@
   <div class="container">
     <h1>Gestión de Productos</h1>
     <p class="subtitle">Administra tu inventario de productos</p>
+    
+    <% if (errorMsg) { %>
+      <div class="error-banner">⚠️ <%= errorMsg %></div>
+    <% } %>
 
+    
     <div class="card">
       <h2>Nuevo Producto</h2>
-      <form action="/items" method="POST">
+      <form>
         <div class="form-grid">
           <div>
             <label>Nombre</label>
-            <input type="text" name="nombre" placeholder="Ej: Laptop Dell XPS" required>
+            <input type="text" id="newNombre" name="nombre" placeholder="Ej: Laptop Dell XPS">
           </div>
           <div>
-            <label>&nbsp;</label>
-            <button class="btn btn-primary" type="submit">+ Agregar Producto</button>
-          </div>
+          <label>Stock</label>
+          <input type="text" id="newStock" name="stock" placeholder="Ej: 10">  <!-- ← type="text" + id -->
+        </div>
           <div style="grid-column: 1 / -1">
-            <label>Descripción</label>
-            <textarea name="descripcion" placeholder="Describe el producto..." required></textarea>
+          <label>Descripción</label>
+          <textarea id="newDescripcion" name="descripcion" placeholder="Describe el producto..."></textarea>
+        </div>
+          <div style="grid-column: 1 / -1">
+              <button class="btn btn-primary" type="button" onclick="crearProducto()">+ Agregar Producto</button>
           </div>
         </div>
       </form>
+    </div>
+    <div style="margin-bottom: 1.5rem; display: flex; gap: 10px;">
+      <input type="text" id="searchInput" placeholder="Buscar producto por nombre..." style="max-width: 400px;">
+      <button class="btn btn-primary" style="width:auto; margin-top:0;" onclick="buscarProducto()">Buscar</button>
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden;">
@@ -82,20 +95,22 @@
             <th>ID</th>
             <th>Nombre</th>
             <th>Descripción</th>
+            <th>Stock</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <% if (items.length === 0) { %>
-            <tr><td colspan="4" class="empty">No hay productos registrados aún</td></tr>
+            <tr><td colspan="5" class="empty">No hay productos registrados aún</td></tr>
           <% } else { %>
             <% items.forEach(item => { %>
               <tr>
                 <td><span class="badge">#<%= item.id %></span></td>
                 <td style="font-weight:500; color:#e2e8f0"><%= item.nombre %></td>
                 <td><%= item.descripcion %></td>
+                <td><%= item.stock ?? 0 %></td>
                 <td><div class="actions">
-                  <button class="btn-warning" onclick="abrirEditar(<%= item.id %>,'<%= item.nombre %>','<%= item.descripcion %>')">Editar</button>
+                  <button class="btn-warning" onclick="abrirEditar(<%= item.id %>,'<%= item.nombre %>','<%= item.descripcion %>',<%= item.stock ?? 0 %>)">Editar</button>
                   <button class="btn-danger" onclick="eliminar(<%= item.id %>)">Eliminar</button>
                 </div></td>
               </tr>
@@ -112,7 +127,9 @@
       <label>Nombre</label>
       <input type="text" id="editNombre" style="margin-bottom:1rem">
       <label>Descripción</label>
-      <textarea id="editDescripcion"></textarea>
+      <textarea id="editDescripcion" style="margin-bottom:1rem"></textarea>
+      <label>Stock</label>
+      <input type="number" id="editStock" min="0">
       <div class="modal-footer">
         <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
         <button class="btn btn-primary" style="width:auto" onclick="guardarEdicion()">Guardar Cambios</button>
@@ -132,10 +149,11 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    function abrirEditar(id, nombre, descripcion) {
+    function abrirEditar(id, nombre, descripcion, stock) {
       editandoId = id;
       document.getElementById('editNombre').value = nombre;
       document.getElementById('editDescripcion').value = descripcion;
+      document.getElementById('editStock').value = stock;
       document.getElementById('modal').classList.add('open');
     }
 
@@ -147,22 +165,120 @@
     async function guardarEdicion() {
       const nombre = document.getElementById('editNombre').value.trim();
       const descripcion = document.getElementById('editDescripcion').value.trim();
-      if (!nombre || !descripcion) return showToast('Completa todos los campos');
-      await fetch('/items/' + editandoId, {
+      const stock = document.getElementById('editStock').value.trim();
+
+      if (!nombre || !descripcion) return showToast('⚠️ Completa todos los campos');
+      if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0) {
+        return showToast('⚠️ El stock debe ser un número válido mayor o igual a 0');
+      }
+
+      const res = await fetch('/items/' + editandoId, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, descripcion })
+        body: JSON.stringify({ nombre, descripcion, stock: parseInt(stock) })
       });
+
+      if (!res.ok) {
+        const data = await res.json();
+        return showToast('⚠️ ' + data.error);
+      }
+
       cerrarModal();
       location.reload();
     }
 
+   async function crearProducto() {
+  const nombre = document.getElementById('newNombre').value.trim();
+  const descripcion = document.getElementById('newDescripcion').value.trim();
+  const stock = document.getElementById('newStock').value.trim();
+
+  // Validación en EJS
+  if (!nombre || !descripcion) {
+    mostrarError(400, 'Nombre y descripción son requeridos');
+    return;
+  }
+  if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0) {
+    mostrarError(400, 'El stock debe ser un número válido mayor o igual a 0');
+    return;
+  }
+
+  const res = await fetch('/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre, descripcion, stock: parseInt(stock) })
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    mostrarError(res.status, data.error); // ← usa el status real del server
+    return;
+  }
+
+  location.reload();
+}
+function mostrarError(status, mensaje) {
+  // 🖥️ Consola
+  console.error(`Error ${status}:`, mensaje);
+
+  // 🔴 Banner en pantalla
+  let banner = document.getElementById('errorBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'errorBanner';
+    banner.className = 'error-banner';
+    // Lo inserta arriba del form
+    const card = document.querySelector('.card');
+    card.parentNode.insertBefore(banner, card);
+  }
+
+  banner.innerHTML = `⚠️ <strong>Error ${status}:</strong> ${mensaje}`;
+  banner.style.display = 'block';
+
+  // Se oculta solo después de 4 segundos
+  setTimeout(() => banner.style.display = 'none', 4000);
+}
     async function eliminar(id) {
       if (confirm('¿Eliminar este producto?')) {
         await fetch('/items/' + id, { method: 'DELETE' });
         location.reload();
       }
     }
+    
+
+    async function buscarProducto() {
+  const nombre = document.getElementById('searchInput').value.trim();
+
+  // Si está vacío, muestra todos los productos normal
+  if (!nombre) {
+    location.reload();
+    return;
+  }
+
+  const res = await fetch('/items/buscar?nombre=' + encodeURIComponent(nombre));
+
+  if (res.status === 404) {
+    mostrarError(404, `No se encontró ningún producto con el nombre "${nombre}"`);
+    // Vacía la tabla
+    document.querySelector('tbody').innerHTML = `<tr><td colspan="5" class="empty">No hay resultados para "${nombre}"</td></tr>`;
+    return;
+  }
+
+  const item = await res.json();
+
+  // Muestra solo ese producto en la tabla
+  document.querySelector('tbody').innerHTML = `
+    <tr>
+      <td><span class="badge">#${item.id}</span></td>
+      <td style="font-weight:500; color:#e2e8f0">${item.nombre}</td>
+      <td>${item.descripcion}</td>
+      <td>${item.stock ?? 0}</td>
+      <td><div class="actions">
+        <button class="btn-warning" onclick="abrirEditar(${item.id},'${item.nombre}','${item.descripcion}',${item.stock ?? 0})">Editar</button>
+        <button class="btn-danger" onclick="eliminar(${item.id})">Eliminar</button>
+      </div></td>
+    </tr>
+  `;
+}
   </script>
 </body>
 </html>

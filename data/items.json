@@ -2,36 +2,43 @@
   {
     "id": 1,
     "nombre": "celular",
-    "descripcion": "iphone 17"
+    "descripcion": "iphone 17",
+    "stock": 1
   },
   {
     "id": 2,
     "nombre": "labtop",
-    "descripcion": "Rysen 7"
+    "descripcion": "Rysen 7",
+    "stock": 0
   },
   {
     "id": 3,
     "nombre": "tablet",
-    "descripcion": "Xiaomi"
+    "descripcion": "Xiaomi",
+    "stock": 0
   },
   {
     "id": 4,
     "nombre": "tablet",
-    "descripcion": "Xiaomi"
+    "descripcion": "Xiaomi",
+    "stock": 0
   },
   {
     "id": 5,
     "nombre": "computadora",
-    "descripcion": "procesador rysen7"
+    "descripcion": "procesador rysen7",
+    "stock": 0
   },
   {
     "id": 6,
     "nombre": "computadora",
-    "descripcion": "procesador rysen7"
+    "descripcion": "procesador rysen7",
+    "stock": 0
   },
   {
     "id": 7,
     "nombre": "celular",
-    "descripcion": "Xiaomi"
+    "descripcion": "Xiaomi",
+    "stock": 0
   }
 ]
