@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Usuarios Externos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    nav { background: #1a1d27; border-bottom: 1px solid #2d3148; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 60px; }
+    nav .logo { font-size: 18px; font-weight: 700; color: #7c6af7; }
+    nav a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+    nav a:hover, nav a.active { color: #e2e8f0; background: #2d3148; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 24px; font-weight: 700; color: #f1f5f9; margin-bottom: 0.25rem; }
+    .subtitle { color: #64748b; font-size: 14px; margin-bottom: 2rem; }
+    .card { background: #1a1d27; border: 1px solid #2d3148; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .search-row { display: flex; gap: 10px; }
+    input { flex: 1; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; padding: 10px 14px; color: #e2e8f0; font-size: 14px; font-family: inherit; }
+    input:focus { outline: none; border-color: #7c6af7; }
+    .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #7c6af7; color: white; }
+    .btn-ghost { background: #2d3148; color: #94a3b8; text-decoration: none; display: inline-block; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; border-bottom: 1px solid #2d3148; }
+    td { padding: 14px; border-bottom: 1px solid #1e2235; font-size: 14px; color: #cbd5e1; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1e2235; }
+    .badge-city { display: inline-block; background: #1a2535; color: #60a5fa; border: 1px solid #1e3a5f; border-radius: 20px; padding: 2px 10px; font-size: 12px; }
+    .badge-co { display: inline-block; background: #1a2530; color: #34d399; border: 1px solid #1a3a30; border-radius: 20px; padding: 2px 10px; font-size: 12px; }
+    .empty { text-align: center; padding: 3rem; color: #475569; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <span class="logo">&#9670; DevPanel</span>
+    <a href="/items">Productos</a>
+    <a href="/usuarios" class="active">Usuarios</a>
+    <a href="/usuarios/transformar">Nombre y Email</a>
+  </nav>
+
+  <div class="container">
+    <h1>Usuarios Externos</h1>
+    <p class="subtitle">Datos consumidos desde jsonplaceholder.typicode.com</p>
+
+    <div class="card">
+      <form action="/usuarios/filtrar" method="GET">
+        <div class="search-row">
+          <input type="text" name="nombre" placeholder="Filtrar por nombre...">
+          <button class="btn btn-primary" type="submit">Buscar</button>
+          <a href="/usuarios" class="btn btn-ghost">Ver todos</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Ciudad</th>
+            <th>Empresa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% const lista = filtrados !== null ? filtrados : usuarios; %>
+          <% if (lista.length === 0) { %>
+            <tr><td colspan="5" class="empty">No se encontraron usuarios</td></tr>
+          <% } else { %>
+            <% lista.forEach(u => { %>
+              <tr>
+                <td style="color:#7c6af7; font-weight:600"><%= u.id %></td>
+                <td style="font-weight:500; color:#e2e8f0"><%= u.name %></td>
+                <td style="color:#94a3b8"><%= u.email %></td>
+                <td><span class="badge-city"><%= u.address.city %></span></td>
+                <td><span class="badge-co"><%= u.company.name %></span></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
